@@ -1,0 +1,18 @@
+# LINE Bot Settings
+LINE_CHANNEL_SECRET=e22c3692c4d8d565608d26cf127d849c
+LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token_here
+
+# Google Gemini API
+GOOGLE_API_KEY=AIzaSyADaWhkISci9lrtrDKN97XkO6eu0tiSBUc
+
+# Database Settings
+DATABASE_URL=postgresql+asyncpg://username:Yuki0911@localhost:5432/line_running_db
+REDIS_URL=redis://localhost:6379/0
+
+# Application Settings
+APP_ENV=development
+DEBUG=true
+SECRET_KEY=your_secret_key_here
+
+# Logging
+LOG_LEVEL=INFO 
