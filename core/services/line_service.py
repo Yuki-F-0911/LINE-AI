@@ -3,6 +3,7 @@
 import logging
 from linebot.v3.messaging import Configuration, ApiClient, MessagingApi, ReplyMessageRequest, TextMessage
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
+from linebot.v3.exceptions import BaseError
 
 from app.config import settings
 from core.services.ai_service import AIService
@@ -38,7 +39,10 @@ class LineService:
             logger.error(f"Error handling text message: {str(e)}")
             # エラー時はデフォルトメッセージを送信
             error_message = "申し訳ございません。一時的にサービスが利用できません。しばらく時間をおいてから再度お試しください。"
-            self.reply_message(event.reply_token, error_message)
+            try:
+                self.reply_message(event.reply_token, error_message)
+            except Exception as reply_error:
+                logger.error(f"Error sending error message: {str(reply_error)}")
     
     def reply_message(self, reply_token: str, message: str) -> None:
         """メッセージ返信"""
@@ -49,8 +53,15 @@ class LineService:
             )
             
             self.messaging_api.reply_message(reply_request)
-            logger.info(f"Reply sent: {message[:50]}...")
+            logger.info(f"Reply sent successfully: {message[:50]}...")
             
+        except BaseError as e:
+            error_msg = str(e).lower()
+            if "reply token" in error_msg and ("expired" in error_msg or "invalid" in error_msg):
+                logger.warning(f"Reply token expired or invalid: {str(e)}")
+            else:
+                logger.error(f"LINE Bot API error sending reply: {str(e)}")
+            raise
         except Exception as e:
             logger.error(f"Error sending reply: {str(e)}")
             raise 

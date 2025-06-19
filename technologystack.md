@@ -4,114 +4,126 @@
 
 **高度なパーソナライズ機能**と**スケーラブルなLINE Bot**を核とした、陸上競技練習相談アプリケーションの技術スタック。AI技術を活用しつつ、ユーザー体験を最優先に設計。
 
+---
+
 ## 🔷 バックエンド技術
 
 ### プログラミング言語・フレームワーク
-- **Python 3.11+** (メイン言語)
-  - **FastAPI 0.104+**: 高性能なAPI開発、自動ドキュメント生成
-  - **Pydantic 2.5+**: データバリデーション、型安全性
-  - **SQLAlchemy 2.0+**: ORM、データベース操作
-  - **Alembic**: データベースマイグレーション
+- **Python 3.11**（メイン言語）
+- **FastAPI 0.104+**（APIサーバー、CORS対応、OpenAPI自動生成）
+- **Pydantic 2.5+ / pydantic-settings**（設定管理・型安全性、app/config.py）
+- **SQLAlchemy 2.0+**（ORM、DB接続/infrastructure/database/connection.py, models/）
+- **asyncpg 0.29+**（PostgreSQL非同期ドライバ、DB接続）
+- **alembic**（DBマイグレーション、※現状マイグレーションファイル未作成）
 
-### 代替技術 (要承認時)
-- **Node.js 20+ + TypeScript 5+**: 非同期処理重視の場合
-  - **Express.js 4.18+**: Webフレームワーク
-  - **Prisma 5+**: ORM
+### API・ルーティング
+- **FastAPI Router**（api/routes/health.py, webhook.py）
+
+---
 
 ## 🔷 AI・機械学習技術
 
-### 大規模言語モデル (LLM)
-- **Google Gemini Pro API**: メインのLLM
-  - **google-generativeai 0.3+**: Python SDK
-  - **gemini-pro-vision**: 画像解析機能 (将来拡張用)
+### LLM・AIサービス
+- **Google Gemini Pro API**（AI応答生成、core/services/ai_service.py）
+  - **google-generativeai 0.3+**（Gemini API Python SDK）
 
-### RAG (Retrieval Augmented Generation)
-- **LangChain 0.1+**: RAGパイプライン構築
-  - **langchain-google-genai**: Gemini連携
-  - **langchain-community**: 追加コンポーネント
-- **LlamaIndex 0.9+**: 代替RAGフレームワーク
+### RAG（Retrieval Augmented Generation）
+- **自作簡易RAG**（core/ai/rag/knowledge_base.py）
+  - ※LangChain, ChromaDB, sentence-transformers等は現状未使用・import実績なし
 
-### LLMオーケストレーション
-- **Dify**: プロンプト管理、ワークフロー、ログ分析
-  - **dify-client-python**: Python連携
+---
 
-### ベクトルデータベース
-- **Chroma DB 0.4+**: 軽量、開発初期向け
-- **Pinecone**: 本格運用時の候補
-- **Weaviate**: オンプレミス要件時の候補
+## 🔷 データベース・キャッシュ
 
-### 埋め込みモデル
-- **text-embedding-004**: Google の最新埋め込みモデル
-- **sentence-transformers 2.2+**: 多言語対応
+- **PostgreSQL 15+**（ユーザー・練習記録/infrastructure/database/models/）
+- **asyncpg**（DB接続）
+- **Redis 7+**（キャッシュ/セッション、app/config.pyで設定のみ、実装は未着手）
 
-## 🔷 データベース技術
-
-### メインデータベース
-- **PostgreSQL 15+**: ユーザー情報、練習記録
-  - **asyncpg 0.29+**: 非同期PostgreSQLドライバー
-  - **Redis 7+**: セッション管理、キャッシュ
-
-### 代替技術
-- **MongoDB 7+**: スキーマ柔軟性重視の場合
-  - **motor 3.3+**: 非同期MongoDBドライバー
+---
 
 ## 🔷 LINEプラットフォーム
 
-### LINE連携
-- **LINE Messaging API**: Bot機能
-  - **line-bot-sdk 3.8+**: Python SDK
-- **LIFF 2.23+**: LINE内Webアプリ (将来機能)
+- **LINE Messaging API**（Bot機能、api/routes/webhook.py, core/services/line_service.py）
+  - **line-bot-sdk 3.8+**（Python SDK）
 
-## 🔷 インフラ・クラウド技術
+---
 
-### クラウドプラットフォーム
-- **Google Cloud Platform**: Gemini API との親和性
-  - **Cloud Run**: サーバーレスコンテナ
-  - **Cloud SQL**: PostgreSQL マネージドサービス
-  - **Vertex AI**: ML/AI サービス統合
+## 🔷 インフラ・クラウド
 
-### 代替クラウド
-- **AWS**: 
-  - **Lambda + API Gateway**: サーバーレス
-  - **RDS**: データベース
-  - **Bedrock**: AI サービス
-- **Azure**:
-  - **Container Apps**: コンテナ実行
-  - **Cognitive Services**: AI サービス
+- **Google Cloud Platform**（Gemini API利用、将来の本番運用想定）
+- **Cloud Run, Cloud SQL**（将来の本番運用候補、現状はローカル開発中心）
+- **Docker**（開発・本番環境のコンテナ化想定、Dockerfile/composeは未同梱）
 
-### コンテナ・オーケストレーション
-- **Docker**: コンテナ化
-- **Docker Compose**: ローカル開発環境
-- **Kubernetes**: 本格運用時
+---
 
 ## 🔷 開発・運用ツール
 
-### 開発環境
-- **Poetry 1.7+**: Python依存関係管理
-- **Pre-commit**: コード品質チェック
-- **Black**: コードフォーマッター
-- **Ruff**: 高速リンター
-- **pytest 7+**: テストフレームワーク
+- **Poetry 1.7+**（依存管理/pyproject.toml）
+- **pytest 7+ / pytest-asyncio**（テスト/tests/）
+- **pre-commit**（コード品質チェック、.pre-commit-config.yaml）
+- **Black**（コードフォーマット）
+- **Ruff**（静的解析）
+- **mypy**（型チェック）
+- **httpx**（テスト用HTTPクライアント、tests/test_health.py等）
+- **coverage**（テストカバレッジ計測）
+- **python-dotenv**（環境変数管理、tests/test_ai_service.py等）
 
-### 監視・ログ
-- **Sentry**: エラー監視
-- **Prometheus + Grafana**: メトリクス監視
-- **ELK Stack**: ログ解析 (本格運用時)
-
-### CI/CD
-- **GitHub Actions**: 継続的インテグレーション
-- **Cloud Build**: Google Cloud デプロイメント
+---
 
 ## 🔷 セキュリティ・認証
 
-### セキュリティ
-- **python-jose 3.3+**: JWT処理
-- **bcrypt 4.1+**: パスワードハッシュ化
-- **python-multipart**: ファイルアップロード
+- **python-jose 3.3+**（JWT処理、現状import実績なし/将来拡張用）
+- **bcrypt 4.1+**（パスワードハッシュ化、現状import実績なし/将来拡張用）
+- **python-multipart**（ファイルアップロード、現状import実績なし/将来拡張用）
 
-### 環境設定
-- **python-dotenv 1.0+**: 環境変数管理
-- **pydantic-settings**: 設定管理
+---
+
+## 🔷 データ処理・分析
+
+- **pandas 2.1+ / numpy 1.26+**（現状import実績なし/将来拡張用）
+
+---
+
+## 🔷 バージョン管理・CI/CD
+
+- **Git / GitHub**（バージョン管理・プロジェクト管理）
+- **GitHub Actions**（CI/CD、将来拡張用）
+
+---
+
+## 🔷 注意事項
+
+- 本ファイルは実装で実際に使われている技術を中心に記載しています。
+- pyproject.tomlに記載があるが現状import実績がないものは「将来拡張用」として明記。
+- RAGやベクトルDB、LLMオーケストレーション等の高度AI技術は現状「構造のみ」存在し、実装・import実績はありません。
+- 技術スタックのバージョン変更や新規導入時は必ず事前に承認を得てください。
+
+---
+
+## 🔷 パフォーマンス最適化
+
+### 非同期処理
+- **asyncio**: Python非同期プログラミング
+- **aiohttp 3.9+**: 非同期HTTPクライアント
+- **uvicorn 0.24+**: ASGI サーバー
+
+### キャッシュ
+- **Redis**: インメモリキャッシュ
+- **aiocache**: 非同期キャッシュライブラリ
+
+## 🔷 テスト・品質保証
+
+### テスト
+- **pytest-asyncio**: 非同期テスト
+- **httpx**: テスト用HTTPクライアント
+- **factory-boy**: テストデータ生成
+
+### 品質管理
+- **coverage**: テストカバレッジ
+- **bandit**: セキュリティ監査
+- **mypy**: 静的型チェック
+
+---
 
 ## 🔷 フロントエンド技術 (LIFF用)
 

@@ -1,6 +1,6 @@
 """LINE Webhook API"""
 
-from fastapi import APIRouter, Request, HTTPException, Header
+from fastapi import APIRouter, Request, HTTPException, Header, BackgroundTasks
 from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import Configuration, ApiClient, MessagingApi
@@ -24,6 +24,7 @@ line_service = LineService()
 @router.post("/line")
 async def line_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     x_line_signature: str = Header(None)
 ):
     """LINE Webhook処理"""
@@ -37,7 +38,10 @@ async def line_webhook(
         # 署名検証
         handler.handle(body_str, x_line_signature)
         
-        logger.info("Webhook processed successfully")
+        # バックグラウンドでメッセージ処理を実行
+        background_tasks.add_task(process_webhook_events, body_str, x_line_signature)
+        
+        logger.info("Webhook processed successfully - returning 200 OK immediately")
         return "OK"
         
     except InvalidSignatureError:
@@ -48,20 +52,30 @@ async def line_webhook(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+async def process_webhook_events(body_str: str, x_line_signature: str):
+    """バックグラウンドでwebhookイベントを処理"""
+    try:
+        # イベントを再解析して処理
+        events = handler.parser.parse(body_str, x_line_signature)
+        
+        for event in events:
+            if isinstance(event, MessageEvent) and isinstance(event.message, TextMessageContent):
+                logger.info(f"Processing text message from user: {event.source.user_id}")
+                logger.info(f"Message content: {event.message.text}")
+                logger.info(f"Reply token: {event.reply_token}")
+                
+                # LINE serviceに処理を委譲
+                line_service.handle_text_message(event)
+                
+                logger.info("Text message processed successfully in background")
+                
+    except Exception as e:
+        logger.error(f"Background webhook processing error: {str(e)}")
+
+
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_text_message(event):
-    """テキストメッセージ処理"""
-    try:
-        logger.info(f"Processing text message from user: {event.source.user_id}")
-        logger.info(f"Message content: {event.message.text}")
-        logger.info(f"Reply token: {event.reply_token}")
-        
-        # LINE serviceに処理を委譲
-        line_service.handle_text_message(event)
-        
-        logger.info("Text message processed successfully")
-        
-    except Exception as e:
-        logger.error(f"Text message handling error: {str(e)}")
-        # エラー時も200を返してLINEに再送させない
-        pass 
+    """テキストメッセージ処理（レガシー用 - 実際は使用されない）"""
+    # この関数は即座に200 OKを返すために使用されない
+    # 実際の処理はprocess_webhook_eventsで行われる
+    pass 
