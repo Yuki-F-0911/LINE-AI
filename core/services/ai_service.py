@@ -5,7 +5,6 @@ import google.generativeai as genai
 from typing import Optional
 
 from app.config import settings
-from core.ai.rag.knowledge_base import KnowledgeBase
 
 logger = logging.getLogger(__name__)
 
@@ -18,20 +17,14 @@ class AIService:
         # Gemini API設定
         genai.configure(api_key=settings.google_api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
-        
-        # 知識ベース初期化
-        self.knowledge_base = KnowledgeBase()
     
     def generate_response(self, user_id: str, message: str) -> str:
         """AI応答生成"""
         try:
             logger.info(f"Generating AI response for user {user_id}: {message[:50]}...")
             
-            # 関連知識を検索（RAG）
-            relevant_knowledge = self.knowledge_base.search_relevant_knowledge(message)
-            
-            # プロンプト構築
-            prompt = self._build_prompt(message, relevant_knowledge)
+            # プロンプト構築（知識ベースなし）
+            prompt = self._build_prompt(message)
             
             # Gemini API で応答生成
             response = self.model.generate_content(prompt)
@@ -45,12 +38,9 @@ class AIService:
             logger.error(f"Error generating AI response: {str(e)}")
             return self._get_fallback_response()
     
-    def _build_prompt(self, user_message: str, relevant_knowledge: str) -> str:
+    def _build_prompt(self, user_message: str) -> str:
         """プロンプト構築"""
         return f"""あなたは陸上競技の練習アドバイザーです。特に中長距離ランナーの練習相談に専門的にお答えします。
-
-【専門知識】
-{relevant_knowledge}
 
 【ユーザーからの相談】
 {user_message}

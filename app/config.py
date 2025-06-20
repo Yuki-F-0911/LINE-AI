@@ -14,14 +14,14 @@ class Settings(BaseSettings):
     # Google Gemini API
     google_api_key: str
     
-    # Database Settings
-    database_url: str
-    redis_url: str = "redis://localhost:6379/0"
+    # Database Settings (Optional for now)
+    database_url: Optional[str] = None
+    redis_url: Optional[str] = None
     
     # Application Settings
     app_env: str = "development"
     debug: bool = True
-    secret_key: str
+    secret_key: str = "default_secret_key"
     
     # Logging
     log_level: str = "INFO"
