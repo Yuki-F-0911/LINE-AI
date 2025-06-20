@@ -1,0 +1,41 @@
+# Google Cloud Run用 Dockerfile
+FROM python:3.11-slim
+
+# 作業ディレクトリ設定
+WORKDIR /app
+
+# システム依存関係のインストール（Rustコンパイル用）
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Rustのインストール（google-generativeai用）
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Pythonの依存関係をコピー
+COPY requirements.txt .
+
+# 依存関係のインストール
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# アプリケーションコードをコピー
+COPY . .
+
+# ログディレクトリ作成
+RUN mkdir -p /app/logs
+
+# 非rootユーザー作成
+RUN useradd --create-home --shell /bin/bash app
+RUN chown -R app:app /app
+USER app
+
+# ポート設定（Cloud Runは環境変数PORTを使用）
+EXPOSE 8080
+
+# 起動コマンド（Cloud Run用設定ファイルを使用）
+CMD exec gunicorn --config gunicorn.cloudrun.conf.py app.main:app 

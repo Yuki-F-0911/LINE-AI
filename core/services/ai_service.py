@@ -23,7 +23,7 @@ class AIService:
         try:
             logger.info(f"Generating AI response for user {user_id}: {message[:50]}...")
             
-            # プロンプト構築（知識ベースなし）
+            # プロンプト構築
             prompt = self._build_prompt(message)
             
             # Gemini API で応答生成
