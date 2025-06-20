@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: line-running-consultation
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app.main:app -c gunicorn.conf.py"
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /health/
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: false
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LINE_CHANNEL_SECRET
+        sync: false
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: line-running-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: line-running-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+
+  - type: pserv
+    name: line-running-db
+    env: postgresql
+    plan: free
+    region: singapore
+    databaseName: line_running_db
+    databaseUser: postgres
+
+  - type: redis
+    name: line-running-redis
+    plan: free
+    region: singapore
+    maxmemoryPolicy: allkeys-lru 
