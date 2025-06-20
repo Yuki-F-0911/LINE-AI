@@ -73,6 +73,17 @@ app.add_middleware(
 app.include_router(webhook.router, prefix="/webhook", tags=["webhook"])
 app.include_router(health.router, prefix="/health", tags=["health"])
 
+@app.get("/")
+async def root():
+    """ルートエンドポイント"""
+    return {
+        "message": "LINE練習相談アプリケーション",
+        "status": "running",
+        "version": "0.1.0",
+        "health_check": "/health/",
+        "webhook": "/webhook/line"
+    }
+
 @app.on_event("startup")
 async def startup_event():
     """アプリケーション起動時の処理"""
