@@ -1,0 +1,36 @@
+[Unit]
+Description=LINE練習相談アプリケーション
+After=network.target
+Wants=network.target
+
+[Service]
+Type=exec
+User=app
+Group=app
+WorkingDirectory=/app
+Environment=PATH=/app/.venv/bin
+ExecStart=/app/.venv/bin/gunicorn app.main:app -c gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+StartLimitInterval=60
+StartLimitBurst=3
+
+# セキュリティ設定
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/app/logs
+
+# ログ設定
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=line-running-consultation
+
+# リソース制限
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target 
